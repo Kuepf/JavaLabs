@@ -1,5 +1,7 @@
-package com.client.demo;
+package com.client.demo.rest;
 
+import com.client.demo.amqp_producer.WeaponAmqpProducer;
+import com.client.demo.client.ServiceClient;
 import com.common.CreatorDTO;
 import com.common.WeaponDTO;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,9 @@ import java.util.List;
 public class ServiceAPI {
     @Autowired
     ServiceClient serviceClient;
+    @Autowired
+    WeaponAmqpProducer weaponAmqpProducer;
+
     @GetMapping("/creators")
     public List<CreatorDTO> creators() {
         return serviceClient.GetCreators();
@@ -40,6 +45,11 @@ public class ServiceAPI {
     @PutMapping("/weapons/{weaponId}")
     public  WeaponDTO updateWeapon(@RequestBody WeaponDTO weaponDTO, @PathVariable Integer weaponId){
         return  serviceClient.updateWeapon(weaponDTO, weaponId);
+    }
+
+    @PutMapping("/weapons/rabbitMQ/{weaponId}")
+    public  void updateRabbitMQWeapon(@RequestBody WeaponDTO weaponDTO, @PathVariable Integer weaponId){
+        weaponAmqpProducer.sendMessage(weaponDTO, weaponId);
     }
 
 }

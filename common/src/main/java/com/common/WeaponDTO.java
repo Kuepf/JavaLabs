@@ -15,4 +15,28 @@ public class WeaponDTO {
     private String name;
 
     private CreatorDTO creator;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public CreatorDTO getCreator() {
+        return creator;
+    }
+
+    public void setCreator(CreatorDTO creator) {
+        this.creator = creator;
+    }
 }

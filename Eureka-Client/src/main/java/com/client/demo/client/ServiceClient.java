@@ -1,4 +1,4 @@
-package com.client.demo;
+package com.client.demo.client;
 
 import com.common.CreatorDTO;
 import  com.common.WeaponDTO;
