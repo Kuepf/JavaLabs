@@ -46,6 +46,7 @@ public class MyWeaponService implements WeaponService
                     creator.setCreator(newObject.getCreator());
                     creator.setName(newObject.getName());
                     creator.setId(newObject.getId());
+                    creator.setIsDelete(newObject.isDelete());
                     return weaponRepository.save(creator);
                 })
                 .orElseGet(()->{

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 
 @Data
 @Entity
@@ -20,6 +21,13 @@ public class Weapon {
     @NotNull
     @Column(name = "Name")
     private String name;
+
+    @JsonIgnore
+    @Column(columnDefinition = "Boolean default 'false'")
+    private  Boolean isDelete = false;
+
+    public boolean isDelete(){return isDelete;}
+    public void  setIsDelete(Boolean isDeleted){isDelete = isDeleted;}
 
     public int getId()
     {

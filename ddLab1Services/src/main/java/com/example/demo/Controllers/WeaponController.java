@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,7 +32,7 @@ import static org.springframework.http.ResponseEntity.ok;
 @RequestMapping("/weapons")
 public class WeaponController {
     @Autowired
-    private WeaponService WeaponService;
+    private WeaponService weaponService;
     @Autowired
     CreatorService myCreatorService;
     private final WeaponResourcesAssembler assembler;
@@ -42,18 +43,23 @@ public class WeaponController {
         this.directorAssembler = creatorResourcesAssembler;
     }
     @GetMapping
-    public Resources<Resource<Weapon>> getWeapons(){
-        List<Resource<Weapon>> list = WeaponService.getAll().stream()
-                .map(assembler::toResource)
-                .collect(Collectors.toList());
-        return new Resources<>(
-                list,
-                linkTo(methodOn(WeaponController.class).getWeapons()).withSelfRel()
-        );
+    public List<Weapon> getWeapons(){
+        List<Weapon> weapons = weaponService.getAll();
+        List<Weapon> resultWeapons = new ArrayList<>();
+        if(weapons != null || weapons.size() != 0){
+            weapons.forEach(weapon -> {
+                if(!weapon.isDelete()){
+                    resultWeapons.add(weapon);
+                }
+            });
+        } else {
+            return  new ArrayList<>();
+        }
+        return  resultWeapons;
     }
     @GetMapping("/{weaponId}")
     public ResponseEntity<ResourceSupport> getWeapon(@PathVariable Integer weaponId){
-        Optional<Weapon> weapon = WeaponService.getObjectById(weaponId);
+        Optional<Weapon> weapon = weaponService.getObjectById(weaponId);
         return weapon.isPresent() ?
                 ok(assembler.toResource(weapon.get())) :
                 ResponseEntity
@@ -62,21 +68,22 @@ public class WeaponController {
     }
     @PostMapping
     public ResponseEntity<?> createWeapon(@RequestBody Weapon newWeapon) throws URISyntaxException {
-        Resource<Weapon> resource = assembler.toResource(WeaponService.saveObject(newWeapon));
+        Resource<Weapon> resource = assembler.toResource(weaponService.saveObject(newWeapon));
         return ResponseEntity
                 .created(new URI(resource.getId().expand().getHref()))
-                .body(resource);    }
+                .body(resource);
+    }
     @PutMapping("/{weaponId}")
     public ResponseEntity<?> updateWeapon(@RequestBody Weapon updatedMovie, @PathVariable(name = "weaponId") Integer weaponId) throws URISyntaxException {
-        Weapon updatedObj = WeaponService.getObjectById(weaponId)
+        Weapon updatedObj = weaponService.getObjectById(weaponId)
                 .map(weapon -> {
                     weapon.setName(updatedMovie.getName());
                     weapon.setCreator(updatedMovie.getCreator());
-                    return WeaponService.saveObject(weapon);
+                    return weaponService.saveObject(weapon);
                 })
                 .orElseGet(()->{
                     updatedMovie.setId(weaponId);
-                    return WeaponService.saveObject(updatedMovie);
+                    return weaponService.saveObject(updatedMovie);
                 });
 
         Resource<Weapon> resource = assembler.toResource(updatedObj);
@@ -87,8 +94,15 @@ public class WeaponController {
     @DeleteMapping("/{weaponId}")
     public ResponseEntity<?> deleteWeapon(@PathVariable Integer weaponId){
         try{
-            changeWeaponCreator(weaponId, -2);
-            WeaponService.deleteObject(weaponId);
+            // changeWeaponCreator(weaponId, -2);
+            List<Weapon> weapons = weaponService.getAll();
+            weapons.forEach(weapon -> {
+                if(weapon.getId() == weaponId){
+                    weapon.setIsDelete(true);
+                    weaponService.updateObject(weapon, weaponId);
+                }
+            } );
+            // weaponService.deleteObject(weaponId);
         }
         catch(VechicleNotFoundException ex){
             return ResponseEntity
@@ -103,7 +117,7 @@ public class WeaponController {
 
     @GetMapping("/{weaponId}/creator")
     public ResponseEntity<ResourceSupport> getWeaponOfCreator(@PathVariable Integer weaponId){
-        Weapon weapon = WeaponService.getObjectById(weaponId)
+        Weapon weapon = weaponService.getObjectById(weaponId)
                 .orElseThrow(() -> new VechicleNotFoundException(weaponId));
         if(weapon.getCreator() == null)
             return ResponseEntity.noContent().build();
@@ -120,7 +134,7 @@ public class WeaponController {
 
     @PostMapping("/{weaponId}/creator/{newCreatorId}")
     public Resources<Resource<Weapon>> changeWeaponCreator(@PathVariable Integer weaponId, @PathVariable Integer newCreatorId){
-        Weapon weapon = WeaponService.getObjectById(weaponId)
+        Weapon weapon = weaponService.getObjectById(weaponId)
                 .orElseThrow(() -> new VechicleNotFoundException(weaponId));
         removeWeaponFromCreator(weapon);
         return addWeaponToCreator(weapon, newCreatorId);
@@ -146,12 +160,12 @@ public class WeaponController {
             weaponCreator.removeWeapons(weapon);
             weaponCreator.setWeapons(weaponCreator.getWeapons());
             myCreatorService.saveObject(weaponCreator);
-            WeaponService.saveObject(weapon);
+            weaponService.saveObject(weapon);
         }
     }
 
     private Resources<Resource<Weapon>> addWeaponToCreator(Weapon weapon, Integer creatorId){
-        Weapon weaponMain = WeaponService.getObjectById(weapon.getId()).
+        Weapon weaponMain = weaponService.getObjectById(weapon.getId()).
                 orElseThrow(() -> new IllegalArgumentException("Something wrong with weapon: " + weapon));
         if(creatorId == -2)
             return null;
@@ -161,7 +175,7 @@ public class WeaponController {
         creator.addWeapon(weaponMain);
         creator.setWeapons(creator.getWeapons());
         myCreatorService.saveObject(creator);
-        WeaponService.saveObject(weaponMain);
+        weaponService.saveObject(weaponMain);
         return getWeaponsOfCreator(creatorId);
     }
 
