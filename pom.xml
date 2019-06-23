@@ -6,8 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.1.5.RELEASE</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <version>2.1.6.RELEASE</version>
     </parent>
     <groupId>com.lab</groupId>
     <artifactId>demo</artifactId>
@@ -21,9 +20,11 @@
     </properties>
 
     <modules>
-        <module>Euro</module>
-        <module>dLab1Services</module>
         <module>common</module>
+        <module>Eureka-Client</module>
+        <module>ddLab1Services</module>
+        <module>configs</module>
+        <module>Service-Registry</module>
     </modules>
 
     <dependencyManagement>
